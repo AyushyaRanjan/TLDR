@@ -1,0 +1,41 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      OLLAMA_CONTEXT_LENGTH: "8192"
+
+  model-init:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    volumes:
+      - ./ollama:/modelfile:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        until ollama list; do sleep 2; done
+        ollama pull qwen2.5:3b
+        ollama create tldr-qwen -f /modelfile/Modelfile
+    restart: "no"
+
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      LLM_BASE_URL: http://ollama:11434/v1
+      LLM_API_KEY: ollama
+      LLM_MODEL: tldr-qwen
+      STREAMLIT_SERVER_ADDRESS: "0.0.0.0"
+      STREAMLIT_SERVER_HEADLESS: "true"
+    depends_on:
+      - ollama
+
+volumes:
+  ollama-data:

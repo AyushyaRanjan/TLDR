@@ -1,0 +1,13 @@
+# Derived model with a context window large enough for tldr-everything.
+# Ollama's OpenAI-compatible endpoint does not reliably honor a per-request
+# context size, and the daemon default is small. Prompts are then truncated
+# with no error. Build this once: `make model` or
+# `ollama create tldr-qwen -f ollama/Modelfile`
+# Then set LLM_MODEL=tldr-qwen.
+#
+# Alternative: start the daemon with OLLAMA_CONTEXT_LENGTH=8192 and keep
+# LLM_MODEL=qwen2.5:3b. That env var must be set before `ollama serve`.
+
+FROM qwen2.5:3b
+PARAMETER num_ctx 8192
+PARAMETER temperature 0.2
